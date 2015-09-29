@@ -14,7 +14,10 @@
                  [environ "1.0.1"]
                  [tentacles "0.3.0"]]
   :plugins [[lein-ring "0.8.13"]
-            [lein-environ "1.0.1"]]
+            [lein-environ "1.0.1"]
+            [com.palletops/uberimage "0.4.1"]
+            [lein-vanity "0.2.0"]
+            [lein-marginalia "0.8.0"]]
   :ring {:handler peep.handler/app}
   :uberjar-name "peep.jar"
   :profiles

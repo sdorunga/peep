@@ -10,8 +10,10 @@
                  [hiccup "1.0.5"]
                  [com.cemerick/friend "0.2.0"]
                  [friend-oauth2 "0.1.1"]
+                 [environ "1.0.1"]
                  [tentacles "0.3.0"]]
-  :plugins [[lein-ring "0.8.13"]]
+  :plugins [[lein-ring "0.8.13"]
+            [lein-environ "1.0.1"]]
   :ring {:handler peep.handler/app}
   :profiles
   {:dev {:dependencies [[javax.servlet/servlet-api "2.5"]

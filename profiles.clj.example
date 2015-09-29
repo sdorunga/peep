@@ -1,0 +1,10 @@
+{:dev  {:env {:client-id "xxx"
+              :client-secret "xxx"
+              :domain "http://xxx.com"
+              :access-token-url "https://xxx/access_token"
+              :authentication-url "https://xxx/authorize"
+              :session-store-key "awefawefawef"
+              :mongo-uri  "mongodb://127.0.0.1"
+              :mongo-db "peep"
+              }}
+ :test {:env {}}}

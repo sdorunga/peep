@@ -6,22 +6,23 @@
             [friend-oauth2.workflow :as oauth2]
             [friend-oauth2.util     :refer [format-config-uri get-access-token-from-params]]
             [tentacles.users :as users]
-            [tentacles.repos :as repos]))
+            [tentacles.repos :as repos]
+            [environ.core :refer [env]]))
 
 (def client-config
-  {:client-id     "4298ab491bba7f6f1e0d" ;;(env :friend-oauth2-client-id)
-   :client-secret "ee54929a579021658082ee76826897a59af2226f" ;;(env :friend-oauth2-client-secret)
-   :callback      {:domain "http://45afad09.ngrok.com" :path "/github.callback"}})
+  {:client-id     (env :client-id)
+   :client-secret (env :client-secret)
+   :callback      {:domain (env :domain) :path "/github.callback"}})
 
 (def uri-config
-  {:authentication-uri {:url "https://github.com/login/oauth/authorize"
+  {:authentication-uri {:url (env :authentication-url)
                         :query {:client_id (:client-id client-config)
                                 :response_type "code"
                                 :redirect_uri (format-config-uri client-config)
                                 :scope "repo"
                                 }}
 
-   :access-token-uri {:url "https://github.com/login/oauth/access_token"
+   :access-token-uri {:url (env :access-token-url)
                       :query {:client_id (:client-id client-config)
                               :client_secret (:client-secret client-config)
                               :grant_type "authorization_code"
@@ -58,7 +59,7 @@
 (defn toggle-hook
   [user repo-name req]
   (let [token (:access-token (:current (friend/identity req)))]
-    (repos/create-hook (:login user) repo-name "web" {:url "http://example.com" :content_type "json"} (merge (auth token) {:active true :events ["*" "push" "pull_request"] }))))
+    (repos/create-hook (:login user) repo-name "web" {:url (str (env :domain) "/webhooks") :content_type "json"} (merge (auth token) {:active true :events ["*" "push" "pull_request"] }))))
 
 (defroutes routes
   (GET "/" req

@@ -2,12 +2,12 @@
   (:require [monger.core :as mg]
             [monger.operators :refer :all]
             [monger.joda-time]
-            [monger.collection :as mc])
+            [monger.collection :as mc]
+            [environ.core :refer [env]])
   (:import org.bson.types.ObjectId))
 
 (def ^:private db
-  (let [conn (mg/connect)]
-     (mg/get-db conn "peep")))
+  (:db (mg/connect-via-uri (str (env :mongo-uri) "/" (env :mongo-db)))))
 
 (defn store-event
   [type event]

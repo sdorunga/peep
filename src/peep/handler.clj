@@ -13,17 +13,15 @@
 
 (defroutes app-routes
   repo-management/routes
-  (POST "/webhooks" {:keys [headers body]} (println (get headers "x-github-event") headers) (store-event (get headers "x-github-event") body){:status 200})
+  (POST "/webhooks" {:keys [headers body]} (store-event (get headers "x-github-event") body) {:status 200})
   (route/not-found "Not Found"))
 
 (def app
   (-> app-routes
       (friend/authenticate repo-management/friend-config)
-      (#(fn [request] (let [response (% request)] (println request) response)))
-      (wrap-params)
+      ;;(#(fn [request] (let [response (% request)] (println request) response)))
       (wrap-session {:store (cookie-store {:key "awefawefawefawef"})})
+      (wrap-params)
+      (wrap-json-body)
       (wrap-defaults (-> site-defaults
-                         (assoc-in [:security :anti-forgery] false)))
-      ;;(logger/wrap-with-logger)
-      ;;(wrap-json-body {:keywords? true :bigdecimals? true})
-      ))
+                         (assoc-in [:security :anti-forgery] false)))))

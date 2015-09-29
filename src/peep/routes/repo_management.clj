@@ -11,7 +11,7 @@
 (def client-config
   {:client-id     "4298ab491bba7f6f1e0d" ;;(env :friend-oauth2-client-id)
    :client-secret "ee54929a579021658082ee76826897a59af2226f" ;;(env :friend-oauth2-client-secret)
-   :callback      {:domain "http://1590298f.ngrok.com" :path "/github.callback"}})
+   :callback      {:domain "http://45afad09.ngrok.com" :path "/github.callback"}})
 
 (def uri-config
   {:authentication-uri {:url "https://github.com/login/oauth/authorize"
@@ -42,17 +42,29 @@
                    :credential-fn credential-fn})
                  ]})
 
+(defn auth
+  [token]
+  {:oauth-token token :client-id (:client-id uri-config) :client-token (:client-token uri-config)})
+(defn get-token
+  [request]
+  (:access-token (:current (friend/identity request))))
+(defn repositories
+  [token]
+  (repos/repos (merge (auth token) {:affiliation "owner"})))
+(defn hooks
+  [user repo token]
+  (repos/hooks (:login user) repo (auth token)))
 
 (defn toggle-hook
-  [user repo-name]
-  (println  (:login user) "sdaf asdf " repo-name)
-  (repos/create-hook (:login user) repo-name "makers-hook" {:active true :events "*"} {:url "http://example.com"}))
+  [user repo-name req]
+  (let [token (:access-token (:current (friend/identity req)))]
+    (repos/create-hook (:login user) repo-name "web" {:url "http://example.com" :content_type "json"} (merge (auth token) {:active true :events ["*" "push" "pull_request"] }))))
 
 (defroutes routes
   (GET "/" req
-       (let [token (:access-token (:current (friend/identity req)))
-             repos (repos/repos {:affiliation "owner" :oauth-token token :client-id "4298ab491bba7f6f1e0d" :client-token "ee54929a579021658082ee76826897a59af2226f"})
-             user (users/me {:oauth-token token :client-id "4298ab491bba7f6f1e0d" :client-token "ee54929a579021658082ee76826897a59af2226f"})]
+       (let [token (get-token req)
+             repos (repositories token)
+             user (users/me (auth token))]
          (html5 [:head
                  [:title "Peep Time"]]
                 [:body
@@ -63,7 +75,9 @@
                  (when token
                    [:div (str "Welcome " (:name user))]
                    [:div "Repos: "
-                    (unordered-list (map #(link-to (str "toggle-repo/" %) %) (map :name repos)))])])))
+                    (unordered-list
+                     (map #(conj [:div] (link-to (str "toggle-repo/" %) %) (if-let [repo-hooks (map :url (hooks user % token))] (unordered-list repo-hooks))) (map :name repos)))])])))
   (GET "/toggle-repo/:name" {:keys [params] :as req}
-       (let [token (:access-token (:current (friend/identity req)))
-             user (users/me {:oauth-token token :client-id "4298ab491bba7f6f1e0d" :client-token "ee54929a579021658082ee76826897a59af2226f"})] (toggle-hook user (:name params))) "Success"))
+       (let [token (get-token req)
+             user (users/me (auth token))]
+         (toggle-hook user (:name params) req)) "Success"))

@@ -1,6 +1,7 @@
 (ns peep.handler
   (:require [environ.core :refer [env]]
             [compojure.core :refer :all]
+            [compojure.handler :refer [site]]
             [compojure.route :as route]
             [ring.adapter.jetty :as jetty]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults site-defaults]]

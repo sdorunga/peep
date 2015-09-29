@@ -1,6 +1,8 @@
 (ns peep.handler
-  (:require [compojure.core :refer :all]
+  (:require [environ.core :refer [env]]
+            [compojure.core :refer :all]
             [compojure.route :as route]
+            [ring.adapter.jetty :as jetty]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults site-defaults]]
             [ring.middleware.json :refer [wrap-json-body]]
             [ring.middleware.params :refer [wrap-params]]
@@ -25,3 +27,7 @@
       (wrap-json-body)
       (wrap-defaults (-> site-defaults
                          (assoc-in [:security :anti-forgery] false)))))
+
+(defn -main [& [port]]
+    (let [port (Integer. (or port (env :port) 3000))]
+          (jetty/run-jetty (site #'app') {:port port :join? false})))

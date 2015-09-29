@@ -31,4 +31,4 @@
 
 (defn -main [& [port]]
     (let [port (Integer. (or port (env :port) 3000))]
-          (jetty/run-jetty (site #'app') {:port port :join? false})))
+          (jetty/run-jetty (site app) {:port port :join? false})))

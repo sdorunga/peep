@@ -56,6 +56,18 @@
   [user repo token]
   (repos/hooks (:login user) repo (auth token)))
 
+(defn repositories-with-hooks
+  [user token]
+  (let [repos (map :name (repositories token))]
+    (->> (for [repo repos] [repo (future (hooks user repo token))])
+         (map (fn [[repo hooks]] [repo (deref hooks)]))
+         (into {}))))
+
+(defn render-repos
+  [user token]
+  (unordered-list (for [m (repositories-with-hooks user token)
+                        ] [:div [(link-to (str "toggle-repo/") (first m))  (map #(get-in % [:config :url]) (last m))]])))
+
 (defn toggle-hook
   [user repo-name req]
   (let [token (:access-token (:current (friend/identity req)))]
@@ -65,7 +77,8 @@
   (GET "/" req
        (let [token (get-token req)
              repos (repositories token)
-             user (users/me (auth token))]
+             user (users/me (auth token))
+             repos-with-hooks (repositories-with-hooks user token)]
          (html5 [:head
                  [:title "Peep Time"]]
                 [:body
@@ -76,8 +89,7 @@
                  (when token
                    [:div (str "Welcome " (:name user))]
                    [:div "Repos: "
-                    (unordered-list
-                     (map #(conj [:div] (link-to (str "toggle-repo/" %) %) (if-let [repo-hooks (map :url (hooks user % token))] (unordered-list repo-hooks))) (map :name repos)))])])))
+                    (render-repos user token)])])))
   (GET "/toggle-repo/:name" {:keys [params] :as req}
        (let [token (get-token req)
              user (users/me (auth token))]

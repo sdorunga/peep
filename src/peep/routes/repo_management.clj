@@ -1,5 +1,6 @@
 (ns peep.routes.repo-management
   (:require [compojure.core :refer [GET POST defroutes]]
+            [ring.util.response :as response]
             [hiccup.page :refer :all]
             [hiccup.element :refer :all]
             [cemerick.friend        :as friend]
@@ -95,19 +96,20 @@
          (html5 [:head
                  [:title "Peep Time"]]
                 [:body
-                 [:div "Hello World"]
-                 [:a {:href "github.callback"} "Click here to begin"]
-                 [:div ]
+                 [:div "Repo activity tracking"]
+                 [:a {:href "github.callback"} "Login with GitHub"]
                  [:div (str "Token: " token)]
                  (when token
-                   [:div (str "Welcome " (:name user))]
+                   [:div (str "Welcome " (:login user))]
                    [:div "Repos: "
                     (render-repos user token)])])))
   (GET "/toggle-repo/:name" {:keys [params] :as req}
        (let [token (get-token req)
              user (users/me (auth token))]
-         (add-hook user (:name params) req)) "Success")
+         (add-hook user (:name params) req))
+       (response/redirect "/"))
   (GET "/remove-webhook/:name/:id" {:keys [params] :as req}
        (let [token (get-token req)
              user (users/me (auth token))]
-         (remove-hook user (:name params) (:id params) req)) "Success"))
+         (remove-hook user (:name params) (:id params) req))
+       (response/redirect "/")))

@@ -98,11 +98,12 @@
                 [:body
                  [:div "Repo activity tracking"]
                  [:a {:href "github.callback"} "Login with GitHub"]
-                 [:div (str "Token: " token)]
                  (when token
-                   [:div (str "Welcome " (:login user))]
-                   [:div "Repos: "
-                    (render-repos user token)])])))
+                   [:section {:class "repositories"}
+                    [:div (str "Token: " token)]
+                    [:div (str "Welcome " (:login user))]
+                    [:div "Repos: "
+                     (render-repos user token)]])])))
   (GET "/toggle-repo/:name" {:keys [params] :as req}
        (let [token (get-token req)
              user (users/me (auth token))]

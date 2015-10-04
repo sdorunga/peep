@@ -63,15 +63,28 @@
          (map (fn [[repo hooks]] [repo (deref hooks)]))
          (into {}))))
 
+(defn toggle-repo-link
+  [[name webhooks]]
+  (println "######################## TOGGLE REPO #######################")
+  (println "Name: " name " - Webhooks: " webhooks)
+  (if-let [hook (first (filter #(re-find (re-pattern (env :domain)) (get-in % [:config :url] "")) webhooks))]
+    (link-to (str "remove-webhook/" name "/" (:id hook)) (str "Remove " name))
+    (link-to (str "toggle-repo/" name) (str "Add " name))))
+
 (defn render-repos
   [user token]
   (unordered-list (for [m (repositories-with-hooks user token)
-                        ] [:div (link-to (str "toggle-repo/" (first m)) (first m)) (unordered-list (map #(get-in % [:config :url]) (last m)))])))
+                        ] [:div (toggle-repo-link m) (unordered-list (map #(get-in % [:config :url]) (last m)))])))
 
-(defn toggle-hook
+(defn add-hook
   [user repo-name req]
   (let [token (:access-token (:current (friend/identity req)))]
     (repos/create-hook (:login user) repo-name "web" {:url (str (env :domain) "/webhooks") :content_type "json"} (merge (auth token) {:active true :events ["*" "push" "pull_request"] }))))
+
+(defn remove-hook
+  [user repo-name hook-id req]
+  (let [token (:access-token (:current (friend/identity req)))]
+    (repos/delete-hook (:login user) repo-name hook-id (auth token))))
 
 (defroutes routes
   (GET "/" req
@@ -93,4 +106,8 @@
   (GET "/toggle-repo/:name" {:keys [params] :as req}
        (let [token (get-token req)
              user (users/me (auth token))]
-         (toggle-hook user (:name params) req)) "Success"))
+         (add-hook user (:name params) req)) "Success")
+  (GET "/remove-webhook/:name/:id" {:keys [params] :as req}
+       (let [token (get-token req)
+             user (users/me (auth token))]
+         (remove-hook user (:name params) (:id params) req)) "Success"))

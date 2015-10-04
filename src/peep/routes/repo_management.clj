@@ -66,7 +66,7 @@
 (defn render-repos
   [user token]
   (unordered-list (for [m (repositories-with-hooks user token)
-                        ] [:div (link-to (str "toggle-repo/") (first m))  (map #(get-in % [:config :url]) (last m))])))
+                        ] [:div (link-to (str "toggle-repo/" (first m)) (first m))  (map #(get-in % [:config :url]) (last m))])))
 
 (defn toggle-hook
   [user repo-name req]

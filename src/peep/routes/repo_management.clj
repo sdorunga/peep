@@ -66,8 +66,6 @@
 
 (defn toggle-repo-link
   [[name webhooks]]
-  (println "######################## TOGGLE REPO #######################")
-  (println "Name: " name " - Webhooks: " webhooks)
   (if-let [hook (first (filter #(re-find (re-pattern (env :domain)) (get-in % [:config :url] "")) webhooks))]
     (link-to (str "remove-webhook/" name "/" (:id hook)) (str "Remove " name))
     (link-to (str "toggle-repo/" name) (str "Add " name))))
